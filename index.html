@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #ddd9d0;
+    --text: #1a1814;
+    --text-muted: #7a756a;
+    --accent: #c8602a;
+    --accent-light: #f5ede8;
+    --accent-hover: #a84e20;
+    --danger: #c0392b;
+    --danger-light: #fdf2f2;
+    --success: #2e7d52;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+    --radius: 10px;
+    --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  header {
+    background: var(--text);
+    color: #f5f4f0;
+    padding: 28px 24px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+
+  header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 5vw, 1.9rem);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    line-height: 1;
+  }
+
+  header .subtitle {
+    font-size: 0.78rem;
+    color: #a09a90;
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .total-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .total-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #a09a90;
+  }
+
+  .total-amount {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
+    font-weight: 400;
+    color: #f5f4f0;
+    letter-spacing: -0.01em;
+  }
+
+  .total-amount span {
+    font-size: 0.65em;
+    color: #a09a90;
+    margin-right: 2px;
+  }
+
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 16px 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  .card-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .form-card { margin-bottom: 24px; }
+
+  form { padding: 20px 24px 24px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px 20px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  label .req {
+    color: var(--accent);
+    margin-left: 2px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a756a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200, 96, 42, 0.1);
+  }
+
+  input::placeholder { color: #bbb7b0; }
+
+  .currency-note {
+    font-size: 0.74rem;
+    color: var(--accent);
+    margin-top: 4px;
+    display: none;
+  }
+
+  .currency-note.visible { display: block; }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  button {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 3px 8px rgba(200,96,42,0.25); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1.5px solid #f0cece;
+    font-size: 0.8rem;
+    padding: 8px 14px;
+  }
+
+  .btn-danger:hover { background: #fce8e8; }
+
+  .count-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th:first-child { border-radius: 0; }
+
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #f0ede8;
+    color: var(--text);
+    vertical-align: top;
+    max-width: 160px;
+  }
+
+  td.amount {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  td.muted { color: var(--text-muted); font-size: 0.8rem; }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: #faf9f7; }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    padding: 4px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 1rem;
+    line-height: 1;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
+  .delete-btn:active { transform: scale(0.9); }
+
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .empty-state .icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill-food { background: #fef3e2; color: #b26a00; }
+  .pill-transport { background: #e8f0fe; color: #1a56cc; }
+  .pill-accommodation { background: #e8faf0; color: #1a7a3c; }
+  .pill-shopping { background: #f5e8fe; color: #7b1fa2; }
+  .pill-entertainment { background: #fff0e8; color: #c84b0a; }
+  .pill-utilities { background: #e8f4f8; color: #0a6b8a; }
+  .pill-health { background: #fce8ea; color: #c42b3a; }
+  .pill-others { background: var(--surface2); color: var(--text-muted); }
+
+  .timestamp { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+
+  @media (max-width: 600px) {
+    header { padding: 20px 16px 18px; }
+    form { padding: 16px; }
+    .form-grid { grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+    .form-actions { flex-direction: column; }
+    .btn-primary, .btn-secondary { width: 100%; justify-content: center; text-align: center; }
+    .card-header { padding: 16px; }
+    th, td { padding: 9px 10px; }
+  }
+
+  @media (max-width: 400px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  tbody tr { animation: slideIn 0.2s ease; }
+
+  .sync-status {
+    display: none;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    gap: 5px;
+    transition: opacity 0.3s;
+  }
+  .sync-status.syncing { background: #e8f0fe; color: #1a56cc; }
+  .sync-status.success { background: #e8faf0; color: #1a7a3c; }
+  .sync-status.error   { background: var(--danger-light); color: var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Expense Tracker</h1>
+  <div class="subtitle">Personal spending log</div>
+  <div class="total-bar">
+    <div class="total-label">Total</div>
+    <div class="total-amount"><span>SGD</span><span id="totalDisplay">0.00</span></div>
+    <span id="syncStatus" class="sync-status"></span>
+  </div>
+</header>
+
+<div class="main">
+  <div class="card form-card">
+    <div class="card-header">
+      <span class="card-title">Add Expense</span>
+    </div>
+    <form id="expenseForm">
+      <div class="form-grid">
+
+        <div class="field">
+          <label>Paid By <span class="req">*</span></label>
+          <select id="paidBy" required>
+            <option value="">Select...</option>
+            <option value="Weiheng">Weiheng</option>
+            <option value="YJ">YJ</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Amount (SGD) <span class="req">*</span></label>
+          <input type="number" id="amount" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+
+        <div class="field">
+          <label>Payment Method <span class="req">*</span></label>
+          <select id="paymentMethod" required>
+            <option value="">Select...</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="Cash">Cash</option>
+            <option value="QR / PayNow">QR / PayNow</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Category <span class="req">*</span></label>
+          <select id="category" required>
+            <option value="">Select...</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Accommodation">Accommodation</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Health">Health</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label>Item Description</label>
+          <input type="text" id="description" placeholder="e.g. Lunch at Maxwell Food Centre">
+        </div>
+
+        <div class="field">
+          <label>Original Currency</label>
+          <select id="currency">
+            <option value="SGD">SGD</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+            <option value="CNY">CNY</option>
+            <option value="AUD">AUD</option>
+            <option value="HKD">HKD</option>
+            <option value="MYR">MYR</option>
+            <option value="THB">THB</option>
+            <option value="IDR">IDR</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="currency-note" id="currencyNote">⚠ Foreign currency — please enter the SGD-equivalent amount above.</div>
+        </div>
+
+        <div class="field">
+          <label>Remarks</label>
+          <input type="text" id="remarks" placeholder="Optional notes">
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="resetBtn">Clear</button>
+        <button type="submit" class="btn-primary">+ Add Expense</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Entries</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="count-badge" id="countBadge">0 entries</span>
+        <button class="btn-danger" id="clearAllBtn">Clear All</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="expenseTable">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Paid By</th>
+            <th>Amount (SGD)</th>
+            <th>Method</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Currency</th>
+            <th>Remarks</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState">
+        <div class="icon">🧾</div>
+        <p>No expenses yet.<br>Add your first entry above.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'expense_tracker_v1';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNUDxyAL56nqBLfMU95CrsRKTinrFUvrF36NrKUi_RHfupBVSUss2sWLXbzkMf92-I/exec';
+
+  let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+  const form = document.getElementById('expenseForm');
+  const tableBody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+  const totalDisplay = document.getElementById('totalDisplay');
+  const countBadge = document.getElementById('countBadge');
+  const currencySelect = document.getElementById('currency');
+  const currencyNote = document.getElementById('currencyNote');
+  const syncStatus = document.getElementById('syncStatus');
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+  }
+
+  function setSyncStatus(state, message) {
+    syncStatus.className = 'sync-status ' + state;
+    syncStatus.textContent = message;
+    syncStatus.style.display = 'inline-flex';
+    if (state === 'success') {
+      setTimeout(() => { syncStatus.style.display = 'none'; }, 3000);
+    }
+  }
+
+  async function syncToSheets(payload) {
+    setSyncStatus('syncing', '↑ Syncing…');
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      setSyncStatus('success', '✓ Saved to Sheets');
+    } catch (err) {
+      setSyncStatus('error', '✕ Sync failed');
+    }
+  }
+
+  function formatDate(ts) {
+    const d = new Date(ts);
+    const date = d.toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' });
+    const time = d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' });
+    return `${date}<br><span style="color:#aaa;font-size:0.7rem">${time}</span>`;
+  }
+
+  function formatDatePlain(ts) {
+    const d = new Date(ts);
+    return d.toLocaleString('en-SG', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function categoryPill(cat) {
+    const key = cat.toLowerCase().replace(/\s+/g,'').replace('/','');
+    const cls = {
+      'food': 'pill-food',
+      'transport': 'pill-transport',
+      'accommodation': 'pill-accommodation',
+      'shopping': 'pill-shopping',
+      'entertainment': 'pill-entertainment',
+      'utilities': 'pill-utilities',
+      'health': 'pill-health',
+      'others': 'pill-others'
+    }[key] || 'pill-others';
+    return `<span class="pill ${cls}">${cat}</span>`;
+  }
+
+  function renderRow(expense, index) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="timestamp">${formatDate(expense.timestamp)}</td>
+      <td><strong>${expense.paidBy}</strong></td>
+      <td class="amount">$${parseFloat(expense.amount).toFixed(2)}</td>
+      <td class="muted">${expense.paymentMethod}</td>
+      <td>${categoryPill(expense.category)}</td>
+      <td style="max-width:160px;word-break:break-word">${expense.description || '<span style="color:#ccc">—</span>'}</td>
+      <td class="muted">${expense.currency !== 'SGD' ? `<span style="color:var(--accent);font-weight:600">${expense.currency}</span>` : expense.currency}</td>
+      <td class="muted" style="max-width:140px;word-break:break-word">${expense.remarks || '<span style="color:#ccc">—</span>'}</td>
+      <td><button class="delete-btn" title="Delete" onclick="deleteExpense(${index})">✕</button></td>
+    `;
+    return tr;
+  }
+
+  function render() {
+    tableBody.innerHTML = '';
+    const isEmpty = expenses.length === 0;
+    emptyState.style.display = isEmpty ? 'block' : 'none';
+    document.getElementById('expenseTable').style.display = isEmpty ? 'none' : 'table';
+
+    let total = 0;
+    expenses.forEach((exp, i) => {
+      tableBody.appendChild(renderRow(exp, i));
+      total += parseFloat(exp.amount) || 0;
+    });
+
+    totalDisplay.textContent = total.toFixed(2);
+    countBadge.textContent = `${expenses.length} ${expenses.length === 1 ? 'entry' : 'entries'}`;
+  }
+
+  async function deleteExpense(index) {
+    const removed = expenses[index];
+    expenses.splice(index, 1);
+    save();
+    render();
+    await syncToSheets({ action: 'delete', timestamp: formatDatePlain(removed.timestamp) });
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const expense = {
+      timestamp: Date.now(),
+      paidBy: document.getElementById('paidBy').value,
+      amount: parseFloat(document.getElementById('amount').value).toFixed(2),
+      paymentMethod: document.getElementById('paymentMethod').value,
+      category: document.getElementById('category').value,
+      description: document.getElementById('description').value.trim(),
+      currency: currencySelect.value,
+      remarks: document.getElementById('remarks').value.trim(),
+    };
+    expenses.unshift(expense);
+    save();
+    render();
+    form.reset();
+    currencySelect.value = 'SGD';
+    currencyNote.classList.remove('visible');
+    document.getElementById('paidBy').focus();
+
+    await syncToSheets({
+      action: 'add',
+      timestamp: formatDatePlain(expense.timestamp),
+      paidBy: expense.paidBy,
+      amount: expense.amount,
+      paymentMethod: expense.paymentMethod,
+      category: expense.category,
+      description: expense.description,
+      currency: expense.currency,
+      remarks: expense.remarks,
+    });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    form.reset();
+    currencySelect.value = 'SGD';
+    currencyNote.classList.remove('visible');
+  });
+
+  document.getElementById('clearAllBtn').addEventListener('click', async function() {
+    if (expenses.length === 0) return;
+    if (confirm(`Delete all ${expenses.length} expense entries? This cannot be undone.`)) {
+      expenses = [];
+      save();
+      render();
+      await syncToSheets({ action: 'clear' });
+    }
+  });
+
+  currencySelect.addEventListener('change', function() {
+    currencyNote.classList.toggle('visible', this.value !== 'SGD');
+  });
+
+  render();
+</script>
+</body>
+</html>
