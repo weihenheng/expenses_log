@@ -17,7 +17,6 @@
     --accent-hover: #a84e20;
     --danger: #c0392b;
     --danger-light: #fdf2f2;
-    --success: #2e7d52;
     --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
     --radius: 10px;
     --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
@@ -67,6 +66,7 @@
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid rgba(255,255,255,0.12);
+    flex-wrap: wrap;
   }
 
   .total-label {
@@ -90,8 +90,21 @@
     margin-right: 2px;
   }
 
+  .sync-status {
+    display: none;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .sync-status.syncing { background: rgba(255,255,255,0.12); color: #c8d8f0; }
+  .sync-status.success { background: rgba(46,125,82,0.25); color: #7de0a8; }
+  .sync-status.error   { background: rgba(192,57,43,0.25); color: #f0a09a; }
+
   .main {
-    max-width: 900px;
+    max-width: 960px;
     margin: 0 auto;
     padding: 28px 16px 0;
   }
@@ -101,6 +114,7 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
+    margin-bottom: 24px;
   }
 
   .card-header {
@@ -110,6 +124,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
   }
 
   .card-title {
@@ -120,7 +135,11 @@
     letter-spacing: 0.02em;
   }
 
-  .form-card { margin-bottom: 24px; }
+  .card-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
 
   form { padding: 20px 24px 24px; }
 
@@ -130,12 +149,7 @@
     gap: 16px 20px;
   }
 
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
+  .field { display: flex; flex-direction: column; gap: 6px; }
   .field.full { grid-column: 1 / -1; }
 
   label {
@@ -146,12 +160,9 @@
     color: var(--text-muted);
   }
 
-  label .req {
-    color: var(--accent);
-    margin-left: 2px;
-  }
+  label .req { color: var(--accent); margin-left: 2px; }
 
-  input, select, textarea {
+  input, select {
     width: 100%;
     padding: 10px 12px;
     border: 1.5px solid var(--border);
@@ -180,13 +191,7 @@
 
   input::placeholder { color: #bbb7b0; }
 
-  .currency-note {
-    font-size: 0.74rem;
-    color: var(--accent);
-    margin-top: 4px;
-    display: none;
-  }
-
+  .currency-note { font-size: 0.74rem; color: var(--accent); margin-top: 4px; display: none; }
   .currency-note.visible { display: block; }
 
   .form-actions {
@@ -209,32 +214,13 @@
     padding: 10px 20px;
     transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
   }
-
   button:active { transform: scale(0.97); }
 
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-
+  .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 3px 8px rgba(200,96,42,0.25); }
-
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--text-muted);
-    border: 1.5px solid var(--border);
-  }
-
+  .btn-secondary { background: var(--surface2); color: var(--text-muted); border: 1.5px solid var(--border); }
   .btn-secondary:hover { background: var(--border); }
-
-  .btn-danger {
-    background: var(--danger-light);
-    color: var(--danger);
-    border: 1.5px solid #f0cece;
-    font-size: 0.8rem;
-    padding: 8px 14px;
-  }
-
+  .btn-danger { background: var(--danger-light); color: var(--danger); border: 1.5px solid #f0cece; font-size: 0.8rem; padding: 8px 14px; }
   .btn-danger:hover { background: #fce8e8; }
 
   .count-badge {
@@ -248,16 +234,99 @@
     letter-spacing: 0.04em;
   }
 
-  .table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  /* ─── Credit Card Dashboard ─────────────────────── */
+  .cc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    padding: 20px 24px;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
+  .cc-item {
+    border-radius: 9px;
+    padding: 14px 16px 14px 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
+
+  .cc-item:not(.cc-zero):hover {
+    border-color: var(--cc-color);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+
+  .cc-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    background: var(--cc-color);
+  }
+
+  .cc-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cc-bank {
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 11px;
+  }
+
+  .cc-bar-wrap {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 5px;
+    overflow: hidden;
+    margin-bottom: 9px;
+  }
+
+  .cc-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--cc-color);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .cc-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .cc-amount {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--text);
+  }
+
+  .cc-sgd {
+    font-size: 0.58em;
+    color: var(--text-muted);
+    margin-right: 2px;
+  }
+
+  .cc-txns {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  .cc-zero { opacity: 0.4; }
+
+  /* ─── Table ─────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
   th {
     padding: 11px 14px;
@@ -272,8 +341,6 @@
     white-space: nowrap;
   }
 
-  th:first-child { border-radius: 0; }
-
   td {
     padding: 11px 14px;
     border-bottom: 1px solid #f0ede8;
@@ -282,60 +349,24 @@
     max-width: 160px;
   }
 
-  td.amount {
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 400;
-    white-space: nowrap;
-  }
-
+  td.amount { font-family: var(--font-display); font-size: 0.95rem; white-space: nowrap; }
   td.muted { color: var(--text-muted); font-size: 0.8rem; }
-
   tr:last-child td { border-bottom: none; }
-
   tr:hover td { background: #faf9f7; }
 
   .delete-btn {
-    background: none;
-    border: none;
-    padding: 4px 6px;
-    border-radius: 5px;
-    cursor: pointer;
-    color: #ccc;
-    font-size: 1rem;
-    line-height: 1;
+    background: none; border: none; padding: 4px 6px;
+    border-radius: 5px; cursor: pointer; color: #ccc;
+    font-size: 1rem; line-height: 1;
     transition: color 0.15s, background 0.15s;
   }
-
   .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
-  .delete-btn:active { transform: scale(0.9); }
 
-  .empty-state {
-    padding: 48px 24px;
-    text-align: center;
-    color: var(--text-muted);
-  }
+  .empty-state { padding: 48px 24px; text-align: center; color: var(--text-muted); }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.5; }
 
-  .empty-state .icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
-    opacity: 0.4;
-  }
-
-  .empty-state p {
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-
-  .pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
   .pill-food { background: #fef3e2; color: #b26a00; }
   .pill-transport { background: #e8f0fe; color: #1a56cc; }
   .pill-accommodation { background: #e8faf0; color: #1a7a3c; }
@@ -350,38 +381,24 @@
   @media (max-width: 600px) {
     header { padding: 20px 16px 18px; }
     form { padding: 16px; }
+    .cc-grid { padding: 14px 16px; grid-template-columns: 1fr 1fr; gap: 10px; }
     .form-grid { grid-template-columns: 1fr 1fr; gap: 12px 14px; }
     .form-actions { flex-direction: column; }
-    .btn-primary, .btn-secondary { width: 100%; justify-content: center; text-align: center; }
+    .btn-primary, .btn-secondary { width: 100%; text-align: center; }
     .card-header { padding: 16px; }
     th, td { padding: 9px 10px; }
   }
 
-  @media (max-width: 400px) {
+  @media (max-width: 420px) {
     .form-grid { grid-template-columns: 1fr; }
+    .cc-grid { grid-template-columns: 1fr; }
   }
 
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
   tbody tr { animation: slideIn 0.2s ease; }
-
-  .sync-status {
-    display: none;
-    align-items: center;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 4px 10px;
-    border-radius: 20px;
-    gap: 5px;
-    transition: opacity 0.3s;
-  }
-  .sync-status.syncing { background: #e8f0fe; color: #1a56cc; }
-  .sync-status.success { background: #e8faf0; color: #1a7a3c; }
-  .sync-status.error   { background: var(--danger-light); color: var(--danger); }
 </style>
 </head>
 <body>
@@ -397,7 +414,20 @@
 </header>
 
 <div class="main">
-  <div class="card form-card">
+
+  <!-- ── Credit Card Dashboard ── -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Credit Card Spending</div>
+        <div class="card-subtitle" id="ccMonthLabel">Loading…</div>
+      </div>
+    </div>
+    <div class="cc-grid" id="ccGrid"></div>
+  </div>
+
+  <!-- ── Add Expense Form ── -->
+  <div class="card">
     <div class="card-header">
       <span class="card-title">Add Expense</span>
     </div>
@@ -422,12 +452,21 @@
           <label>Payment Method <span class="req">*</span></label>
           <select id="paymentMethod" required>
             <option value="">Select...</option>
-            <option value="Credit Card">Credit Card</option>
-            <option value="Debit Card">Debit Card</option>
-            <option value="Cash">Cash</option>
-            <option value="QR / PayNow">QR / PayNow</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Other">Other</option>
+            <optgroup label="── Credit Cards ──">
+              <option value="Citi Prestige">Citi Prestige</option>
+              <option value="DBS Woman's World Card">DBS Woman's World Card</option>
+              <option value="UOB Lady's Solitaire">UOB Lady's Solitaire</option>
+              <option value="UOB PPV">UOB PPV</option>
+              <option value="UOB Krisflyer">UOB Krisflyer</option>
+              <option value="HSBC Revolution">HSBC Revolution</option>
+            </optgroup>
+            <optgroup label="── Other Methods ──">
+              <option value="Debit Card">Debit Card</option>
+              <option value="Cash">Cash</option>
+              <option value="QR / PayNow">QR / PayNow</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Other">Other</option>
+            </optgroup>
           </select>
         </div>
 
@@ -484,6 +523,7 @@
     </form>
   </div>
 
+  <!-- ── Entries Table ── -->
   <div class="card">
     <div class="card-header">
       <span class="card-title">Entries</span>
@@ -493,7 +533,7 @@
       </div>
     </div>
     <div class="table-wrap">
-      <table id="expenseTable">
+      <table id="expenseTable" style="display:none">
         <thead>
           <tr>
             <th>Date & Time</th>
@@ -515,116 +555,131 @@
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWftTZjI6OoiMENoVJvrDXievkoRSOx1pKWl2M3AM1H1U0MZL0zfamo1GJatb1RMR1/exec';
 
+  const CREDIT_CARDS = [
+    { name: 'Citi Prestige',           bank: 'Citibank', color: '#b03a2e' },
+    { name: "DBS Woman's World Card",  bank: 'DBS',      color: '#c0392b' },
+    { name: "UOB Lady's Solitaire",    bank: 'UOB',      color: '#8e44ad' },
+    { name: 'UOB PPV',                 bank: 'UOB',      color: '#6c3483' },
+    { name: 'UOB Krisflyer',           bank: 'UOB',      color: '#1a5276' },
+    { name: 'HSBC Revolution',         bank: 'HSBC',     color: '#1e8449' },
+  ];
+
   let expenses = [];
 
-  const form = document.getElementById('expenseForm');
-  const tableBody = document.getElementById('tableBody');
-  const emptyState = document.getElementById('emptyState');
-  const totalDisplay = document.getElementById('totalDisplay');
-  const countBadge = document.getElementById('countBadge');
+  const form           = document.getElementById('expenseForm');
+  const tableBody      = document.getElementById('tableBody');
+  const emptyState     = document.getElementById('emptyState');
+  const totalDisplay   = document.getElementById('totalDisplay');
+  const countBadge     = document.getElementById('countBadge');
   const currencySelect = document.getElementById('currency');
-  const currencyNote = document.getElementById('currencyNote');
-  const syncStatus = document.getElementById('syncStatus');
+  const currencyNote   = document.getElementById('currencyNote');
+  const syncStatus     = document.getElementById('syncStatus');
+  const ccGrid         = document.getElementById('ccGrid');
+  const ccMonthLabel   = document.getElementById('ccMonthLabel');
 
-  function setSyncStatus(state, message) {
+  // ── Utilities ────────────────────────────────────────
+
+  function setSyncStatus(state, msg) {
     syncStatus.className = 'sync-status ' + state;
-    syncStatus.textContent = message;
+    syncStatus.textContent = msg;
     syncStatus.style.display = 'inline-flex';
-    if (state === 'success') {
-      setTimeout(() => { syncStatus.style.display = 'none'; }, 3000);
-    }
+    if (state === 'success') setTimeout(() => { syncStatus.style.display = 'none'; }, 3000);
   }
 
-  async function loadFromSheets() {
-    setSyncStatus('syncing', '↓ Loading…');
-    try {
-      const res = await fetch(SCRIPT_URL + '?cachebust=' + Date.now());
-      const json = await res.json();
-      if (json.status === 'ok') {
-        expenses = json.data.map(row => ({
-          timestamp: row.timestamp,
-          paidBy: row.paidBy,
-          amount: row.amount,
-          paymentMethod: row.paymentMethod,
-          category: row.category,
-          description: row.description || '',
-          currency: row.currency || 'SGD',
-          remarks: row.remarks || ''
-        }));
-        render();
-        setSyncStatus('success', '✓ Loaded');
-      } else {
-        setSyncStatus('error', '✕ Load failed');
-      }
-    } catch (err) {
-      setSyncStatus('error', '✕ Cannot reach Sheets');
-    }
+  function parseTimestamp(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    if (!isNaN(d)) return d;
+    // Handle "01 Mar 2026, 14:30" from en-SG locale
+    const m = String(ts).match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+    if (m) return new Date(`${m[2]} ${m[1]}, ${m[3]}`);
+    return null;
   }
 
-  async function postToSheets(payload) {
-    setSyncStatus('syncing', '↑ Saving…');
-    try {
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      setSyncStatus('success', '✓ Saved');
-    } catch (err) {
-      setSyncStatus('error', '✕ Save failed');
-    }
+  function isCurrentMonth(ts) {
+    const d = parseTimestamp(ts);
+    if (!d) return false;
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }
 
   function formatDate(ts) {
     if (!ts) return '—';
-    // ts may be a plain string from Sheets like "01 Mar 2026, 14:30"
-    const d = new Date(ts);
-    if (isNaN(d)) {
-      // Already a formatted string from Sheets — display as-is
-      return `<span>${ts}</span>`;
-    }
+    const d = parseTimestamp(ts);
+    if (!d || isNaN(d)) return `<span>${ts}</span>`;
     const date = d.toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' });
     const time = d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' });
     return `${date}<br><span style="color:#aaa;font-size:0.7rem">${time}</span>`;
   }
 
   function formatTimestampForSheet() {
-    const d = new Date();
-    return d.toLocaleString('en-SG', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date().toLocaleString('en-SG', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   function categoryPill(cat) {
-    const key = (cat || '').toLowerCase().replace(/\s+/g,'').replace('/','');
-    const cls = {
-      'food': 'pill-food',
-      'transport': 'pill-transport',
-      'accommodation': 'pill-accommodation',
-      'shopping': 'pill-shopping',
-      'entertainment': 'pill-entertainment',
-      'utilities': 'pill-utilities',
-      'health': 'pill-health',
-      'others': 'pill-others'
-    }[key] || 'pill-others';
-    return `<span class="pill ${cls}">${cat || 'Others'}</span>`;
+    const key = (cat||'').toLowerCase().replace(/\s+/g,'').replace('/','');
+    const cls = { food:'pill-food', transport:'pill-transport', accommodation:'pill-accommodation', shopping:'pill-shopping', entertainment:'pill-entertainment', utilities:'pill-utilities', health:'pill-health', others:'pill-others' }[key] || 'pill-others';
+    return `<span class="pill ${cls}">${cat||'Others'}</span>`;
   }
+
+  // ── CC Dashboard ─────────────────────────────────────
+
+  function renderCCDashboard() {
+    const now = new Date();
+    ccMonthLabel.textContent = now.toLocaleString('en-SG', { month: 'long', year: 'numeric' }) + ' · resets on the 1st';
+
+    const totals = {}, counts = {};
+    CREDIT_CARDS.forEach(cc => { totals[cc.name] = 0; counts[cc.name] = 0; });
+
+    expenses.forEach(exp => {
+      if (isCurrentMonth(exp.timestamp) && totals.hasOwnProperty(exp.paymentMethod)) {
+        totals[exp.paymentMethod] += parseFloat(exp.amount) || 0;
+        counts[exp.paymentMethod]++;
+      }
+    });
+
+    const maxAmt = Math.max(...Object.values(totals), 0.01);
+
+    ccGrid.innerHTML = '';
+    CREDIT_CARDS.forEach(cc => {
+      const amt = totals[cc.name];
+      const cnt = counts[cc.name];
+      const pct = (amt / maxAmt) * 100;
+      const el = document.createElement('div');
+      el.className = 'cc-item' + (amt === 0 ? ' cc-zero' : '');
+      el.style.setProperty('--cc-color', cc.color);
+      el.innerHTML = `
+        <div class="cc-name">${cc.name}</div>
+        <div class="cc-bank">${cc.bank}</div>
+        <div class="cc-bar-wrap"><div class="cc-bar" style="width:${amt === 0 ? 0 : pct}%"></div></div>
+        <div class="cc-stats">
+          <div class="cc-amount"><span class="cc-sgd">SGD </span>${amt.toFixed(2)}</div>
+          <div class="cc-txns">${cnt} txn${cnt !== 1 ? 's' : ''}</div>
+        </div>
+      `;
+      ccGrid.appendChild(el);
+    });
+  }
+
+  // ── Table Rendering ──────────────────────────────────
 
   function renderRow(expense, index) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="timestamp">${formatDate(expense.timestamp)}</td>
-      <td><strong>${expense.paidBy || '—'}</strong></td>
-      <td class="amount">$${parseFloat(expense.amount || 0).toFixed(2)}</td>
-      <td class="muted">${expense.paymentMethod || '—'}</td>
+      <td><strong>${expense.paidBy||'—'}</strong></td>
+      <td class="amount">$${parseFloat(expense.amount||0).toFixed(2)}</td>
+      <td class="muted">${expense.paymentMethod||'—'}</td>
       <td>${categoryPill(expense.category)}</td>
-      <td style="max-width:160px;word-break:break-word">${expense.description || '<span style="color:#ccc">—</span>'}</td>
-      <td class="muted">${expense.currency && expense.currency !== 'SGD' ? `<span style="color:var(--accent);font-weight:600">${expense.currency}</span>` : (expense.currency || 'SGD')}</td>
-      <td class="muted" style="max-width:140px;word-break:break-word">${expense.remarks || '<span style="color:#ccc">—</span>'}</td>
+      <td style="max-width:160px;word-break:break-word">${expense.description||'<span style="color:#ccc">—</span>'}</td>
+      <td class="muted">${expense.currency && expense.currency !== 'SGD' ? `<span style="color:var(--accent);font-weight:600">${expense.currency}</span>` : (expense.currency||'SGD')}</td>
+      <td class="muted" style="max-width:140px;word-break:break-word">${expense.remarks||'<span style="color:#ccc">—</span>'}</td>
       <td><button class="delete-btn" title="Delete" onclick="deleteExpense(${index})">✕</button></td>
     `;
     return tr;
@@ -644,7 +699,49 @@
 
     totalDisplay.textContent = total.toFixed(2);
     countBadge.textContent = `${expenses.length} ${expenses.length === 1 ? 'entry' : 'entries'}`;
+    renderCCDashboard();
   }
+
+  // ── Sheets API ────────────────────────────────────────
+
+  async function loadFromSheets() {
+    setSyncStatus('syncing', '↓ Loading…');
+    try {
+      const res = await fetch(SCRIPT_URL + '?cachebust=' + Date.now());
+      const json = await res.json();
+      if (json.status === 'ok') {
+        expenses = json.data.map(r => ({
+          timestamp: r.timestamp, paidBy: r.paidBy, amount: r.amount,
+          paymentMethod: r.paymentMethod, category: r.category,
+          description: r.description || '', currency: r.currency || 'SGD', remarks: r.remarks || ''
+        }));
+        render();
+        setSyncStatus('success', '✓ Loaded');
+      } else {
+        setSyncStatus('error', '✕ Load failed');
+        renderCCDashboard();
+      }
+    } catch (err) {
+      setSyncStatus('error', '✕ Cannot reach Sheets');
+      renderCCDashboard();
+    }
+  }
+
+  async function postToSheets(payload) {
+    setSyncStatus('syncing', '↑ Saving…');
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      setSyncStatus('success', '✓ Saved');
+    } catch (err) {
+      setSyncStatus('error', '✕ Save failed');
+    }
+  }
+
+  // ── Event Handlers ────────────────────────────────────
 
   async function deleteExpense(index) {
     const removed = expenses[index];
@@ -655,40 +752,33 @@
 
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const ts = formatTimestampForSheet();
     const expense = {
-      timestamp: ts,
-      paidBy: document.getElementById('paidBy').value,
-      amount: parseFloat(document.getElementById('amount').value).toFixed(2),
+      timestamp:     formatTimestampForSheet(),
+      paidBy:        document.getElementById('paidBy').value,
+      amount:        parseFloat(document.getElementById('amount').value).toFixed(2),
       paymentMethod: document.getElementById('paymentMethod').value,
-      category: document.getElementById('category').value,
-      description: document.getElementById('description').value.trim(),
-      currency: currencySelect.value,
-      remarks: document.getElementById('remarks').value.trim(),
+      category:      document.getElementById('category').value,
+      description:   document.getElementById('description').value.trim(),
+      currency:      currencySelect.value,
+      remarks:       document.getElementById('remarks').value.trim(),
     };
-
-    // Optimistically add to top of list
     expenses.unshift(expense);
     render();
     form.reset();
     currencySelect.value = 'SGD';
     currencyNote.classList.remove('visible');
     document.getElementById('paidBy').focus();
-
     await postToSheets({ action: 'add', ...expense });
   });
 
   document.getElementById('resetBtn').addEventListener('click', function() {
-    form.reset();
-    currencySelect.value = 'SGD';
-    currencyNote.classList.remove('visible');
+    form.reset(); currencySelect.value = 'SGD'; currencyNote.classList.remove('visible');
   });
 
   document.getElementById('clearAllBtn').addEventListener('click', async function() {
-    if (expenses.length === 0) return;
+    if (!expenses.length) return;
     if (confirm(`Delete all ${expenses.length} expense entries? This cannot be undone.`)) {
-      expenses = [];
-      render();
+      expenses = []; render();
       await postToSheets({ action: 'clear' });
     }
   });
@@ -697,7 +787,6 @@
     currencyNote.classList.toggle('visible', this.value !== 'SGD');
   });
 
-  // Load data from Sheets on startup
   loadFromSheets();
 </script>
 </body>
