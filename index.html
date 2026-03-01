@@ -447,7 +447,7 @@
         </div>
 
         <div class="field">
-          <label>Amount (SGD) <span class="req">*</span></label>
+          <label>Amount <span class="req">*</span></label>
           <input type="number" id="amount" min="0" step="0.01" placeholder="0.00" required>
         </div>
 
@@ -544,12 +544,14 @@
           <tr>
             <th>Date & Time</th>
             <th>Paid By</th>
-            <th>Amount (SGD)</th>
+            <th>Amount</th>
             <th>Method</th>
             <th>Category</th>
             <th>Description</th>
             <th>Currency</th>
             <th>Remarks</th>
+            <th>FX Rate</th>
+            <th>Amount (SGD)</th>
             <th></th>
           </tr>
         </thead>
@@ -565,7 +567,7 @@
 </div>
 
 <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWftTZjI6OoiMENoVJvrDXievkoRSOx1pKWl2M3AM1H1U0MZL0zfamo1GJatb1RMR1/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzsvM_EmyxDTiG_ftZYAXL2ZdSmdA20magPVKsB21ncbDhz44ErAQXxyjqkS1eV1WN/exec';
 
   const CREDIT_CARDS = [
     { name: 'Citi Prestige',           bank: 'Citibank', color: '#b03a2e' },
@@ -657,7 +659,7 @@
 
     expenses.forEach(exp => {
       if (isCurrentMonth(exp.timestamp) && totals.hasOwnProperty(exp.paymentMethod)) {
-        totals[exp.paymentMethod] += parseFloat(exp.amount) || 0;
+        totals[exp.paymentMethod] += parseFloat(exp.amountSGD || exp.amount) || 0;
         counts[exp.paymentMethod]++;
       }
     });
@@ -689,15 +691,19 @@
 
   function renderRow(expense, index) {
     const tr = document.createElement('tr');
+    const fxRate   = expense.fxRate   ? parseFloat(expense.fxRate).toFixed(4)   : '—';
+    const amtSGD   = expense.amountSGD ? parseFloat(expense.amountSGD).toFixed(2) : '—';
     tr.innerHTML = `
       <td class="timestamp">${formatDate(expense.timestamp)}</td>
       <td><strong>${expense.paidBy||'—'}</strong></td>
-      <td class="amount">$${parseFloat(expense.amount||0).toFixed(2)}</td>
+      <td class="amount">${parseFloat(expense.amount||0).toFixed(2)}</td>
       <td class="muted">${expense.paymentMethod||'—'}</td>
       <td>${categoryPill(expense.category)}</td>
       <td style="max-width:160px;word-break:break-word">${expense.description||'<span style="color:#ccc">—</span>'}</td>
       <td class="muted">${expense.currency && expense.currency !== 'SGD' ? `<span style="color:var(--accent);font-weight:600">${expense.currency}</span>` : (expense.currency||'SGD')}</td>
       <td class="muted" style="max-width:140px;word-break:break-word">${expense.remarks||'<span style="color:#ccc">—</span>'}</td>
+      <td class="muted">${fxRate}</td>
+      <td class="amount">$${amtSGD}</td>
       <td><button class="delete-btn" title="Delete" onclick="deleteExpense(${index})">✕</button></td>
     `;
     return tr;
@@ -712,7 +718,7 @@
     let total = 0;
     expenses.forEach((exp, i) => {
       tableBody.appendChild(renderRow(exp, i));
-      total += parseFloat(exp.amount) || 0;
+      total += parseFloat(exp.amountSGD || exp.amount) || 0;
     });
 
     totalDisplay.textContent = total.toFixed(2);
@@ -731,7 +737,8 @@
         expenses = json.data.map(r => ({
           timestamp: r.timestamp, paidBy: r.paidBy, amount: r.amount,
           paymentMethod: r.paymentMethod, category: r.category,
-          description: r.description || '', currency: r.currency || 'SGD', remarks: r.remarks || ''
+          description: r.description || '', currency: r.currency || 'SGD',
+          remarks: r.remarks || '', fxRate: r.fxRate || '', amountSGD: r.amountSGD || ''
         }));
         render();
         setSyncStatus('success', '✓ Loaded');
