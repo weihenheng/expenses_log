@@ -367,14 +367,17 @@
   .empty-state p { font-size: 0.9rem; line-height: 1.5; }
 
   .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-  .pill-food { background: #fef3e2; color: #b26a00; }
-  .pill-transport { background: #e8f0fe; color: #1a56cc; }
-  .pill-accommodation { background: #e8faf0; color: #1a7a3c; }
-  .pill-shopping { background: #f5e8fe; color: #7b1fa2; }
-  .pill-entertainment { background: #fff0e8; color: #c84b0a; }
-  .pill-utilities { background: #e8f4f8; color: #0a6b8a; }
-  .pill-health { background: #fce8ea; color: #c42b3a; }
-  .pill-others { background: var(--surface2); color: var(--text-muted); }
+  .pill-food          { background: #fef3e2; color: #b26a00; }
+  .pill-transport     { background: #e8f0fe; color: #1a56cc; }
+  .pill-shopping      { background: #f5e8fe; color: #7b1fa2; }
+  .pill-groceries     { background: #e8faf0; color: #1a7a3c; }
+  .pill-cleaning      { background: #e3f6fc; color: #0a7a9a; }
+  .pill-utilities     { background: #e8f4f8; color: #0a6b8a; }
+  .pill-appliances    { background: #fde8d8; color: #c05a00; }
+  .pill-maintenance   { background: #f0ede8; color: #6b5e4e; }
+  .pill-subscriptions { background: #fce8f4; color: #a0237b; }
+  .pill-gifts         { background: #fce8ea; color: #c42b3a; }
+  .pill-misc          { background: var(--surface2); color: var(--text-muted); }
 
   .timestamp { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
 
@@ -476,12 +479,15 @@
             <option value="">Select...</option>
             <option value="Food">Food</option>
             <option value="Transport">Transport</option>
-            <option value="Accommodation">Accommodation</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Entertainment">Entertainment</option>
+            <option value="Shopping & Entertainment">Shopping & Entertainment</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Cleaning">Cleaning</option>
             <option value="Utilities">Utilities</option>
-            <option value="Health">Health</option>
-            <option value="Others">Others</option>
+            <option value="Appliances & Furniture">Appliances & Furniture</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Subscriptions">Subscriptions</option>
+            <option value="Gifts">Gifts</option>
+            <option value="Miscellaneous">Miscellaneous</option>
           </select>
         </div>
 
@@ -623,9 +629,21 @@
   }
 
   function categoryPill(cat) {
-    const key = (cat||'').toLowerCase().replace(/\s+/g,'').replace('/','');
-    const cls = { food:'pill-food', transport:'pill-transport', accommodation:'pill-accommodation', shopping:'pill-shopping', entertainment:'pill-entertainment', utilities:'pill-utilities', health:'pill-health', others:'pill-others' }[key] || 'pill-others';
-    return `<span class="pill ${cls}">${cat||'Others'}</span>`;
+    const key = (cat||'').toLowerCase().replace(/[^a-z]/g,'');
+    const cls = {
+      food:                    'pill-food',
+      transport:               'pill-transport',
+      shoppingentertainment:   'pill-shopping',
+      groceries:               'pill-groceries',
+      cleaning:                'pill-cleaning',
+      utilities:               'pill-utilities',
+      appliancesfurniture:     'pill-appliances',
+      maintenance:             'pill-maintenance',
+      subscriptions:           'pill-subscriptions',
+      gifts:                   'pill-gifts',
+      miscellaneous:           'pill-misc',
+    }[key] || 'pill-misc';
+    return `<span class="pill ${cls}">${cat||'Miscellaneous'}</span>`;
   }
 
   // ── CC Dashboard ─────────────────────────────────────
