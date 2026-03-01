@@ -518,10 +518,9 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'expense_tracker_v1';
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNUDxyAL56nqBLfMU95CrsRKTinrFUvrF36NrKUi_RHfupBVSUss2sWLXbzkMf92-I/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWftTZjI6OoiMENoVJvrDXievkoRSOx1pKWl2M3AM1H1U0MZL0zfamo1GJatb1RMR1/exec';
 
-  let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let expenses = [];
 
   const form = document.getElementById('expenseForm');
   const tableBody = document.getElementById('tableBody');
@@ -532,10 +531,6 @@
   const currencyNote = document.getElementById('currencyNote');
   const syncStatus = document.getElementById('syncStatus');
 
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-  }
-
   function setSyncStatus(state, message) {
     syncStatus.className = 'sync-status ' + state;
     syncStatus.textContent = message;
@@ -545,8 +540,34 @@
     }
   }
 
-  async function syncToSheets(payload) {
-    setSyncStatus('syncing', '↑ Syncing…');
+  async function loadFromSheets() {
+    setSyncStatus('syncing', '↓ Loading…');
+    try {
+      const res = await fetch(SCRIPT_URL + '?cachebust=' + Date.now());
+      const json = await res.json();
+      if (json.status === 'ok') {
+        expenses = json.data.map(row => ({
+          timestamp: row.timestamp,
+          paidBy: row.paidBy,
+          amount: row.amount,
+          paymentMethod: row.paymentMethod,
+          category: row.category,
+          description: row.description || '',
+          currency: row.currency || 'SGD',
+          remarks: row.remarks || ''
+        }));
+        render();
+        setSyncStatus('success', '✓ Loaded');
+      } else {
+        setSyncStatus('error', '✕ Load failed');
+      }
+    } catch (err) {
+      setSyncStatus('error', '✕ Cannot reach Sheets');
+    }
+  }
+
+  async function postToSheets(payload) {
+    setSyncStatus('syncing', '↑ Saving…');
     try {
       await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -554,26 +575,32 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      setSyncStatus('success', '✓ Saved to Sheets');
+      setSyncStatus('success', '✓ Saved');
     } catch (err) {
-      setSyncStatus('error', '✕ Sync failed');
+      setSyncStatus('error', '✕ Save failed');
     }
   }
 
   function formatDate(ts) {
+    if (!ts) return '—';
+    // ts may be a plain string from Sheets like "01 Mar 2026, 14:30"
     const d = new Date(ts);
+    if (isNaN(d)) {
+      // Already a formatted string from Sheets — display as-is
+      return `<span>${ts}</span>`;
+    }
     const date = d.toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' });
     const time = d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' });
     return `${date}<br><span style="color:#aaa;font-size:0.7rem">${time}</span>`;
   }
 
-  function formatDatePlain(ts) {
-    const d = new Date(ts);
+  function formatTimestampForSheet() {
+    const d = new Date();
     return d.toLocaleString('en-SG', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   function categoryPill(cat) {
-    const key = cat.toLowerCase().replace(/\s+/g,'').replace('/','');
+    const key = (cat || '').toLowerCase().replace(/\s+/g,'').replace('/','');
     const cls = {
       'food': 'pill-food',
       'transport': 'pill-transport',
@@ -584,19 +611,19 @@
       'health': 'pill-health',
       'others': 'pill-others'
     }[key] || 'pill-others';
-    return `<span class="pill ${cls}">${cat}</span>`;
+    return `<span class="pill ${cls}">${cat || 'Others'}</span>`;
   }
 
   function renderRow(expense, index) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="timestamp">${formatDate(expense.timestamp)}</td>
-      <td><strong>${expense.paidBy}</strong></td>
-      <td class="amount">$${parseFloat(expense.amount).toFixed(2)}</td>
-      <td class="muted">${expense.paymentMethod}</td>
+      <td><strong>${expense.paidBy || '—'}</strong></td>
+      <td class="amount">$${parseFloat(expense.amount || 0).toFixed(2)}</td>
+      <td class="muted">${expense.paymentMethod || '—'}</td>
       <td>${categoryPill(expense.category)}</td>
       <td style="max-width:160px;word-break:break-word">${expense.description || '<span style="color:#ccc">—</span>'}</td>
-      <td class="muted">${expense.currency !== 'SGD' ? `<span style="color:var(--accent);font-weight:600">${expense.currency}</span>` : expense.currency}</td>
+      <td class="muted">${expense.currency && expense.currency !== 'SGD' ? `<span style="color:var(--accent);font-weight:600">${expense.currency}</span>` : (expense.currency || 'SGD')}</td>
       <td class="muted" style="max-width:140px;word-break:break-word">${expense.remarks || '<span style="color:#ccc">—</span>'}</td>
       <td><button class="delete-btn" title="Delete" onclick="deleteExpense(${index})">✕</button></td>
     `;
@@ -622,15 +649,15 @@
   async function deleteExpense(index) {
     const removed = expenses[index];
     expenses.splice(index, 1);
-    save();
     render();
-    await syncToSheets({ action: 'delete', timestamp: formatDatePlain(removed.timestamp) });
+    await postToSheets({ action: 'delete', timestamp: removed.timestamp });
   }
 
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
+    const ts = formatTimestampForSheet();
     const expense = {
-      timestamp: Date.now(),
+      timestamp: ts,
       paidBy: document.getElementById('paidBy').value,
       amount: parseFloat(document.getElementById('amount').value).toFixed(2),
       paymentMethod: document.getElementById('paymentMethod').value,
@@ -639,25 +666,16 @@
       currency: currencySelect.value,
       remarks: document.getElementById('remarks').value.trim(),
     };
+
+    // Optimistically add to top of list
     expenses.unshift(expense);
-    save();
     render();
     form.reset();
     currencySelect.value = 'SGD';
     currencyNote.classList.remove('visible');
     document.getElementById('paidBy').focus();
 
-    await syncToSheets({
-      action: 'add',
-      timestamp: formatDatePlain(expense.timestamp),
-      paidBy: expense.paidBy,
-      amount: expense.amount,
-      paymentMethod: expense.paymentMethod,
-      category: expense.category,
-      description: expense.description,
-      currency: expense.currency,
-      remarks: expense.remarks,
-    });
+    await postToSheets({ action: 'add', ...expense });
   });
 
   document.getElementById('resetBtn').addEventListener('click', function() {
@@ -670,9 +688,8 @@
     if (expenses.length === 0) return;
     if (confirm(`Delete all ${expenses.length} expense entries? This cannot be undone.`)) {
       expenses = [];
-      save();
       render();
-      await syncToSheets({ action: 'clear' });
+      await postToSheets({ action: 'clear' });
     }
   });
 
@@ -680,7 +697,8 @@
     currencyNote.classList.toggle('visible', this.value !== 'SGD');
   });
 
-  render();
+  // Load data from Sheets on startup
+  loadFromSheets();
 </script>
 </body>
 </html>
