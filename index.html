@@ -367,7 +367,8 @@
   .empty-state p { font-size: 0.9rem; line-height: 1.5; }
 
   .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-  .pill-food          { background: #fef3e2; color: #b26a00; }
+  .pill-home      { background: #e8f4f8; color: #0a6b8a; }
+  .pill-personal  { background: #fef3e2; color: #b26a00; }
   .pill-transport     { background: #e8f0fe; color: #1a56cc; }
   .pill-shopping      { background: #f5e8fe; color: #7b1fa2; }
   .pill-groceries     { background: #e8faf0; color: #1a7a3c; }
@@ -436,6 +437,15 @@
     </div>
     <form id="expenseForm">
       <div class="form-grid">
+
+        <div class="field">
+          <label>Expense Type <span class="req">*</span></label>
+          <select id="expenseType" required>
+            <option value="">Select...</option>
+            <option value="Home">Home</option>
+            <option value="Personal">Personal</option>
+          </select>
+        </div>
 
         <div class="field">
           <label>Paid By <span class="req">*</span></label>
@@ -543,6 +553,7 @@
         <thead>
           <tr>
             <th>Date & Time</th>
+            <th>Expense Type</th>
             <th>Paid By</th>
             <th>Amount</th>
             <th>Method</th>
@@ -567,7 +578,7 @@
 </div>
 
 <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoaBgcsUsqWn1P-rWk6QYSfAxsAOPSBiTPuI6lYCA3Jxkhv7sCZCG1SNq0TAg7Zzyg/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzSfyqvY24RbfOi7xgvhU5xM0PfkkPWj_DTvjAq6-44c9SbBNLXsYeQ3ThP_IZTztG/exec';
 
   const CREDIT_CARDS = [
     { name: 'Citi Prestige',           bank: 'Citibank', color: '#b03a2e' },
@@ -691,10 +702,12 @@
 
   function renderRow(expense, index) {
     const tr = document.createElement('tr');
-    const fxRate   = expense.fxRate   ? parseFloat(expense.fxRate).toFixed(4)   : '—';
-    const amtSGD   = expense.amountSGD ? parseFloat(expense.amountSGD).toFixed(2) : '—';
+    const fxRate = expense.fxRate   ? parseFloat(expense.fxRate).toFixed(4)   : '—';
+    const amtSGD = expense.amountSGD ? parseFloat(expense.amountSGD).toFixed(2) : '—';
+    const typeCls = (expense.expenseType||'').toLowerCase() === 'personal' ? 'pill-personal' : 'pill-home';
     tr.innerHTML = `
       <td class="timestamp">${formatDate(expense.timestamp)}</td>
+      <td><span class="pill ${typeCls}">${expense.expenseType||'—'}</span></td>
       <td><strong>${expense.paidBy||'—'}</strong></td>
       <td class="amount">${parseFloat(expense.amount||0).toFixed(2)}</td>
       <td class="muted">${expense.paymentMethod||'—'}</td>
@@ -735,7 +748,7 @@
       const json = await res.json();
       if (json.status === 'ok') {
         expenses = json.data.map(r => ({
-          timestamp: r.timestamp, paidBy: r.paidBy, amount: r.amount,
+          timestamp: r.timestamp, expenseType: r.expenseType, paidBy: r.paidBy, amount: r.amount,
           paymentMethod: r.paymentMethod, category: r.category,
           description: r.description || '', currency: r.currency || 'SGD',
           remarks: r.remarks || '', fxRate: r.fxRate || '', amountSGD: r.amountSGD || ''
@@ -779,6 +792,7 @@
     e.preventDefault();
     const expense = {
       timestamp:     formatTimestampForSheet(),
+      expenseType:   document.getElementById('expenseType').value,
       paidBy:        document.getElementById('paidBy').value,
       amount:        parseFloat(document.getElementById('amount').value).toFixed(2),
       paymentMethod: document.getElementById('paymentMethod').value,
@@ -792,8 +806,15 @@
     form.reset();
     currencySelect.value = 'SGD';
     currencyNote.classList.remove('visible');
-    document.getElementById('paidBy').focus();
+    document.getElementById('expenseType').focus();
     await postToSheets({ action: 'add', ...expense });
+  });
+
+  // Auto-fill Paid By when Personal is selected
+  document.getElementById('expenseType').addEventListener('change', function() {
+    if (this.value === 'Personal') {
+      document.getElementById('paidBy').value = 'Weiheng';
+    }
   });
 
   document.getElementById('resetBtn').addEventListener('click', function() {
